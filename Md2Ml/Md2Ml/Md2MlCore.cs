@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Drawing;
 
 namespace Md2Ml
 {
@@ -317,7 +318,7 @@ namespace Md2Ml
 		{
 			List<int> width = new List<int>();
 			for (var i = 0; i < values.Count; i++)
-				width.Add(int.Parse((10216 / values.Count).ToString("n0").Replace(",", "")));
+				width.Add(int.Parse((10216 / values.Count).ToString().Replace(",", "")));
 
 			AddTableRow(table, values, width.ToArray());
 		}
@@ -336,12 +337,94 @@ namespace Md2Ml
 			imagePart.FeedData(image);
 			AddImageToBody(package, mainDocumentPart.GetIdOfPart(imagePart));
 		}
-		private static void AddImageToBody(WordprocessingDocument document, string relationshipId)
+
+		/**
+		 * My custom improvement on adding images.
+		 * - Get dimensions
+		 * - Get imagePart
+		 * 
+		 * Errors occurs when trying to get image part and dimension from the same stream.
+		 * So I have separated methods to get those informations about image before inserting it to document
+		 */
+		public void AddImage(string absoluteImgPath)
 		{
+			var dimensions = GetDimensions(absoluteImgPath);
+			var imagePart = GetImagePart(absoluteImgPath);
+			AddImageToBody(package, mainDocumentPart.GetIdOfPart(imagePart), dimensions);
+		}
+
+		private ImagePart GetImagePart(string path)
+        {
+			using (FileStream stream = new FileStream(path, FileMode.Open))
+			{
+				ImagePart imagePart = mainDocumentPart.AddImagePart("image/png");
+				imagePart.FeedData(stream);
+				return imagePart;
+			}
+		}
+
+        /**
+		 * My custom improvment for this library
+		 * - Return a tuple reprenting image dimensions
+		 */
+        private ((int width, int height) pixel, (int width, int height) dpi) GetDimensions(string path)
+        {
+			using (FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read))
+			{
+				using (Image tif = Image.FromStream(stream: fs,
+				useEmbeddedColorManagement: false,
+				validateImageData: false))
+				{
+					float pixelWidth = tif.PhysicalDimension.Width;
+					float pixelHeight = tif.PhysicalDimension.Height;
+					var pixelDim = (width: Convert.ToInt32(pixelWidth), height: Convert.ToInt32(pixelHeight));
+
+					float dpiX = tif.HorizontalResolution;
+					float dpiY = tif.VerticalResolution;
+					var dpiDim = (width: Convert.ToInt32(dpiX), height: Convert.ToInt32(dpiY));
+
+					return (pixel: pixelDim, dpi: dpiDim);
+				}
+			}
+		}
+
+        private static void AddImageToBody(WordprocessingDocument document, string relationshipId, ((int width, int height) pixel, (int width, int height) dpi) img = default(((int width, int height), (int width, int height))) )
+		{
+            /*
+			 * Custom improvement in order to insert image with its current dimensions in the word document.
+			 *
+			 */
+
+			// Default image size
+			var widthEmus = 990000L;
+			var heightEmus = 792000L;
+
+			// If dimensions are passed in params, compute the image size within document size before inserting the image
+			if (img != default)
+            {
+				var widthPx = img.pixel.width;
+				var heightPx = img.pixel.height;
+				var hRezDpi = img.dpi.width;
+				var vRezDpi = img.dpi.height;
+				const int emusPerInch = 914400;
+				const int emusPerCm = 360000;
+				var maxWidthCm = 16;
+				widthEmus = (long)(widthPx / hRezDpi * emusPerInch);
+				heightEmus = (long)(heightPx / vRezDpi * emusPerInch);
+				var maxWidthEmus = (long)(maxWidthCm * emusPerCm);
+				if (widthEmus > maxWidthEmus)
+				{
+					var ratio = (heightEmus * 1.0m) / widthEmus;
+					widthEmus = maxWidthEmus;
+					heightEmus = (long)(widthEmus * ratio);
+				}
+				// Perhaps add condition if images are too small
+			}
+
 			var element =
 				 new Drawing(
 					 new Wp.Inline(
-						 new Wp.Extent() { Cx = 990000L, Cy = 792000L },
+						 new Wp.Extent() { Cx = widthEmus, Cy = heightEmus },
 						 new Wp.EffectExtent() { LeftEdge = 0L, TopEdge = 0L, RightEdge = 0L, BottomEdge = 0L },
 						 new Wp.DocProperties() { Id = (UInt32Value)1U, Name = "Picture 1" },
 						 new Wp.NonVisualGraphicFrameDrawingProperties( new A.GraphicFrameLocks() { NoChangeAspect = true }),
@@ -365,7 +448,7 @@ namespace Md2Ml
 									 new Pic.ShapeProperties(
 										 new A.Transform2D(
 											 new A.Offset() { X = 0L, Y = 0L },
-											 new A.Extents() { Cx = 990000L, Cy = 792000L }),
+											 new A.Extents() { Cx = widthEmus, Cy = heightEmus }),
 										 new A.PresetGeometry( new A.AdjustValueList()) { Preset = A.ShapeTypeValues.Rectangle }))
 							 )
 							 { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" })
