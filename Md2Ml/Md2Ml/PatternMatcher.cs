@@ -28,7 +28,7 @@ namespace Md2Ml
              *  2| The content
             */
             { ParaPattern.CodeBlock, new Regex(@"^([ ]{4}|^\t{1})(.*)", RegexOptions.Multiline | RegexOptions.Compiled) },
-            
+
             /**
              * Detect images (only one image on the line), 2 groups:
              *      1| The title of the image

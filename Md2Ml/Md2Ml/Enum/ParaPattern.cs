@@ -5,17 +5,17 @@
     /// </summary>
     public enum ParaPattern
     {
-        Image = 1,
-        Table = 2,
-        TableHeaderSeparation = 3,
-        Quote = 4,
-        InfiniteHeading = 5,
-        UnorderedList = 6,
-        OrderedList = 7,
-        CodeBlock = 8,
-        ReqTitle = 9,
-        ReqProperties1 = 10,
-        ReqProperties2 = 11,
-        AnyChar = 12
+        Image,
+        Table,
+        TableHeaderSeparation,
+        Quote,
+        InfiniteHeading,
+        UnorderedList,
+        OrderedList,
+        CodeBlock,
+        ReqTitle,
+        ReqProperties1,
+        ReqProperties2,
+        AnyChar
     }
 }

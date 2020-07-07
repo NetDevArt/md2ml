@@ -269,24 +269,44 @@ namespace Md2Ml
             {
                 // Break directly if processed line is empty
                 if (string.IsNullOrEmpty(line)) break;
-                
+                var linePattern = PatternMatcher.GetMarkdownMatch(line).Key;
+
                 // If first pattern is a table, do not break until pattern does not match to any table pattern
                 bool isTableContinuing = pattern == ParaPattern.Table && (
-                    PatternMatcher.GetMarkdownMatch(line).Key == ParaPattern.Table ||
-                    PatternMatcher.GetMarkdownMatch(line).Key == ParaPattern.TableHeaderSeparation);
+                    linePattern == ParaPattern.Table ||
+                    linePattern == ParaPattern.TableHeaderSeparation);
 
                 // Quotes are continuing if first pattern is quote
                 // And the current one equals to Quote or AnyChar
                 bool isQuoteContinuing = pattern == ParaPattern.Quote &&
-                                         (PatternMatcher.GetMarkdownMatch(line).Key == ParaPattern.Quote ||
-                                          PatternMatcher.GetMarkdownMatch(line).Key == ParaPattern.AnyChar);
+                                         (linePattern == ParaPattern.Quote ||
+                                          linePattern == ParaPattern.AnyChar);
 
                 // Paragraph types are continuing if previous line does not ends with double space
                 // And first pattern matches with the current one
                 bool isParagraphContinuing = (!previousLine.EndsWith("  ") &&
-                                            (pattern == ParaPattern.AnyChar && PatternMatcher.GetMarkdownMatch(line).Key == pattern));
+                                            (pattern == ParaPattern.AnyChar && linePattern == pattern));
 
-                if (!isTableContinuing && !isQuoteContinuing && !isParagraphContinuing) break;
+                // If list is not continuing, then check if item is detected as a code block
+                bool isListContinuing = (pattern == ParaPattern.OrderedList || pattern == ParaPattern.UnorderedList) &&
+                                        (linePattern == ParaPattern.OrderedList ||
+                                         linePattern == ParaPattern.UnorderedList);
+                if ((pattern == ParaPattern.OrderedList || pattern == ParaPattern.UnorderedList) && !isListContinuing && linePattern == ParaPattern.CodeBlock)
+                {
+                    try
+                    {
+                        linePattern = PatternMatcher.GetMatchFromPattern(line, ParaPattern.OrderedList).Key;
+                    }
+                    catch (Exception e)
+                    {
+                        linePattern = PatternMatcher.GetMatchFromPattern(line, ParaPattern.UnorderedList).Key;
+                    }
+
+                    isListContinuing = (linePattern == ParaPattern.OrderedList || linePattern == ParaPattern.UnorderedList);
+                }
+
+
+                if (!isTableContinuing && !isQuoteContinuing && !isParagraphContinuing && !isListContinuing) break;
 
                 
                 if (pattern == ParaPattern.TableHeaderSeparation ||
