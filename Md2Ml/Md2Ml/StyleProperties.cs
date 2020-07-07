@@ -1,11 +1,8 @@
 ﻿using DocumentFormat.OpenXml.Wordprocessing;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Md2Ml
 {
-	public class FontProperties
+	public class StyleProperties
 	{
 		public string StyleName = null;
 		public string FontName = null;
