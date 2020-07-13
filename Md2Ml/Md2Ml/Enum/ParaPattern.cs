@@ -13,9 +13,6 @@
         UnorderedList,
         OrderedList,
         CodeBlock,
-        ReqTitle,
-        ReqProperties1,
-        ReqProperties2,
         AnyChar
     }
 }

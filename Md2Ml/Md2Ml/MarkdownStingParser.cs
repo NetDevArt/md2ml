@@ -9,7 +9,7 @@ using Md2Ml.Enum;
 
 namespace Md2Ml
 {
-	class MarkdownStringParser
+    internal class MarkdownStringParser
     {
         /// <summary>
 		/// Parse the content, and detect all real lines breaks.
@@ -26,7 +26,7 @@ namespace Md2Ml
 		/// </summary>
 		/// <param name="engine">Describe an openXML object by code</param>
 		/// <param name="mdText">The markdown text to parse</param>
-		public static void Parse(Md2MlEngine engine, string mdText)
+		internal static void Parse(Md2MlEngine engine, string mdText)
         {
             while (!string.IsNullOrEmpty(mdText))
             {
@@ -82,7 +82,6 @@ namespace Md2Ml
                             para.AppendChild(new Break());
                             FormatText(engine, para, text, new StyleProperties());
                         }
-                        
                         mdText = DeleteLines(mdText, rebuildText.counter);
                         continue;
                     case ParaPattern.AnyChar:
@@ -153,7 +152,7 @@ namespace Md2Ml
         /// <param name="paragraph">The Paragraph object previously created</param>
         /// <param name="markdown">The string to be processed</param>
         /// <param name="fontProperties">Style properties to apply to the text</param>
-        public static void FormatText(Md2MlEngine core, Paragraph paragraph, string markdown,
+        internal static void FormatText(Md2MlEngine core, Paragraph paragraph, string markdown,
             StyleProperties fontProperties)
         {
             var hasPattern = PatternMatcher.HasPatterns(markdown);
@@ -184,7 +183,7 @@ namespace Md2Ml
                         FormatText(core, paragraph, FramePendingString(s.Value, "*"), new StyleProperties());
                         break;
                     case StylePattern.MonospaceOrCode:
-                        newFontProperties.StyleName = "InlineCodeChar";
+                        newFontProperties.StyleName = DocStyles.CodeReference.ToDescriptionString();
                         FormatText(core, paragraph, s.Value[0], new StyleProperties());
                         FormatText(core, paragraph, s.Value[1], newFontProperties);
                         FormatText(core, paragraph, FramePendingString(s.Value, "`"), new StyleProperties());
@@ -221,7 +220,7 @@ namespace Md2Ml
         /// <param name="patten"></param>
         /// <param name="startConcatIndex"></param>
         /// <returns></returns>
-        private static string FramePendingString(string[] strs, string patten, int startConcatIndex = 2)
+        private static string FramePendingString(IReadOnlyList<string> strs, string patten, int startConcatIndex = 2)
         {
             var str = "";
             for (int i = startConcatIndex; i < strs.Count(); i++)

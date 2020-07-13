@@ -72,9 +72,10 @@ namespace Md2Ml
 		#region Table Supports
 		public Table CreateTable(int cols)
         {
+			// TODO : Fix the bug, Applying a style to a table is not working
             Table table = new Table();
             TableProperties tableProperties = new TableProperties(
-                new TableStyle() {Val = "Professionnel"},
+                new TableStyle() {Val = DocStyles.TableBlue.ToDescriptionString()},
 				new TableWidth() { Width = "5000", Type = TableWidthUnitValues.Pct });
             table.AppendChild<TableProperties>(tableProperties);
 			

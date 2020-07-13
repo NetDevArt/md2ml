@@ -29,7 +29,11 @@ namespace Md2Ml.Enum
         [Description("CodeBlock")]
         CodeBlock,
         [Description("Quote1")]
-        Quote
+        Quote,
+        [Description("CodeReference")]
+        CodeReference,
+        [Description("TableBlue")]
+        TableBlue
     }
 
     public static class DocStylesExtensions

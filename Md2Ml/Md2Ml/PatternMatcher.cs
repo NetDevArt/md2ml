@@ -6,14 +6,14 @@ using Md2Ml.Enum;
 
 namespace Md2Ml
 {
-    class PatternMatcher
+    public class PatternMatcher
     {
         /// <summary>
         /// Regular expressions to detect patterns of markdown elements at the LINE START
         /// It means if a paragraph contains multiple lines, only the first one defines the type
         /// Beware that some regex have multiple groups 
         /// </summary>
-        private static Dictionary<ParaPattern, Regex> ParagraphPatterns = new Dictionary<ParaPattern, Regex>()
+        private static readonly Dictionary<ParaPattern, Regex> ParagraphPatterns = new Dictionary<ParaPattern, Regex>()
         {
             /**
              * Detect headings, even those higher than 6, 2 groups:
@@ -58,15 +58,7 @@ namespace Md2Ml
             { ParaPattern.Quote, new Regex(@"^(>+)(.*)", RegexOptions.Compiled) },
             { ParaPattern.TableHeaderSeparation, new Regex(@"^(\|\W+\|)", RegexOptions.Compiled)},
             { ParaPattern.Table, new Regex(@"\|(.*)\|", RegexOptions.Compiled) },
-            
 
-            /**
-             *  Detect requirement formatted (special format described by THALES)
-             */
-            {ParaPattern.ReqTitle, new Regex(@"^(\[\w+-\w+-REQ-\d+])([\w|\s]+)", RegexOptions.Compiled)},
-            {ParaPattern.ReqProperties1, new Regex(@"^(@[\w|\s]+:)(.+)", RegexOptions.Compiled)},
-            {ParaPattern.ReqProperties2, new Regex(@"^(%[\w|\s]+:)(.+)", RegexOptions.Compiled)},
-            
             /**
              * Any char except line terminator
              */
@@ -77,7 +69,7 @@ namespace Md2Ml
         /// Regular expression to detect markdown styling elements within a paragraph.
         /// Basically, which elements are contained in a paragraph
         /// </summary>
-        private static Dictionary<StylePattern, Regex> StylePatterns = new Dictionary<StylePattern, Regex>()
+        private static readonly Dictionary<StylePattern, Regex> StylePatterns = new Dictionary<StylePattern, Regex>()
         {
             { StylePattern.Bold, new Regex(@"(?<!\*)\*\*([^\*].+?)\*\*") },
             { StylePattern.Italic, new Regex(@"(?<!\*)\*([^\*].+?)\*") },
@@ -154,6 +146,11 @@ namespace Md2Ml
                 return new KeyValuePair<StylePattern, string[]>(pattern.Key, new []{before, match, after});
             }
             return new KeyValuePair<StylePattern, string[]>(StylePattern.PlainText, new string[] { markdown });
+        }
+
+        public static Regex GetRegexFromPattern(ParaPattern pattern)
+        {
+            return ParagraphPatterns[pattern];
         }
     }
 }
